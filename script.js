@@ -47,6 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+    //丸と三角を生成する
     function drawCircle(x, y, radius) {
         ctx.fillStyle = 'black';
         ctx.beginPath();
