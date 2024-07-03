@@ -1,9 +1,10 @@
+<!--index-->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Color Grid</title>
+    <title>音楽グリッド</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,15 +14,15 @@
     <div id="musical-score">
         This is the musical-score content.
     </div>
-    <canvas id="color-grid" width="1280" height="800"></canvas>
-    <button id="play-sound-button">Play Sounds</button>
-    <div id="speed-control">
-        <label for="speed-slider">Bar Speed:</label>
-        <input type="range" id="speed-slider" min="1" max="10" value="5">
-        <span id="speed-label">5</span>
+    <canvas id="musicGrid" width="1280" height="800"></canvas>
+    <div>
+        <button id="playStopButton">再生</button>
+        <input type="range" id="bpmSlider" min="40" max="200" value="120">
+        <span id="bpmDisplay">BPM: 120</span>
     </div>
-    <button id="save-button">Save Grid</button>
-
-    <script src="script.js"></script>
+    
+    <script src="audioManager.js"></script>
+<script src="script.js"></script>
+    
 </body>
 </html>
