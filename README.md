@@ -43,7 +43,7 @@
 現状:
 https://github.com/momo0128/musicmaker.io/assets/118875439/cbde7c3a-edd6-4f21-9161-aa964a155e66
 ### 使用環境
-- JavaScript対応のウェブブラウザ。
--
+- JavaScript対応のウェブブラウザ
+
 ### Installation
-- リポジトリ https://github.com/momo0128/musicmaker.io.git
+- リポジトリ https://github.com/momo0128/creativemusic.io.git
