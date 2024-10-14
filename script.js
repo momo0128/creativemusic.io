@@ -221,10 +221,8 @@ function playDrumSound(type, duration) {
 
 // 行の色を取得する関数
 function getRowColor(row) {
-    const colors = [
-        'red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet',
-        'pink', 'brown', 'gray', 'cyan', 'magenta', 'lime', 'gold',
-        'salmon', 'purple', 'teal', 'navy'
+    const colors = ['orange','peru','green','lawngreen','deepskyblue','plum','hotpink',
+    'orange','peru','green','lawngreen','deepskyblue','plum','hotpink',
     ];
     return colors[row % colors.length];
 }
