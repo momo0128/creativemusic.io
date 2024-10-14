@@ -4,9 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>音楽グリッド</title>
+    <title>テスト02
+    </title>
     <link rel="stylesheet" href="styles.css">
     <link rel="shortcut icon" href="onpu.png">
+   
+
+   
 
 
 </head>
@@ -17,13 +21,25 @@
     <div id="musical-score">
         This is the musical-score content.
     </div>
-    <canvas id="musicGrid" width="1280" height="800"></canvas>
-    <div>
+
+   
+
+
+
+
+    <div id="musical-score">
+        <canvas id="staffCanvas" width="1200" height="200"></canvas>
+    </div>
+    <canvas id="musicGrid" width="1366" height="400"></canvas>
+
         <button id="playStopButton">再生</button>
         <input type="range" id="bpmSlider" min="40" max="200" value="120">
         <span id="bpmDisplay">BPM: 120</span>
     </div>
-    
+    <div id="topbar">
+        <button id="saveButton">保存</button>
+    </div>
+    <script src="https://unpkg.com/vexflow/releases/vexflow-min.js"></script>
     <script src="audioManager.js"></script>
 <script src="script.js"></script>
     
