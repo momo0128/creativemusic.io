@@ -1,0 +1,54 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #7FD34D;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  text-align: center;
+}
+
+h1 {
+  font-size: 80px;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 50px;
+  position: relative;
+}
+
+.music-notes {
+  font-size: 100px;
+  color: #5A3921;
+  margin-left: 10px;
+}
+
+.button {
+  font-size: 45px;
+  padding: 20px 40px;
+  margin: 15px;
+  border-radius: 15px;
+  color: white;
+  cursor: pointer;
+  font-family: "MS ゴシック" ;
+}
+
+.blue {
+  background-color: #4A99E9;
+}
+
+.green {
+  background-color: #11B05C;
+}
+
+.orange {
+  background-color: #F7A24F;
+}
