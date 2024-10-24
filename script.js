@@ -414,50 +414,114 @@ bpmSlider.addEventListener('input', (event) => {
 
 
 
-////////////////////////グリッド状態をエンコードしてURLに埋め込む////////////////////////////////////////
-f// グリッドの状態を取得し、URLに埋め込む関数
-function getGridState() {
-    const gridState = {
-        activeCells: Array.from(activeCells),
-        enlargedCells: Array.from(enlargedCells),
-        bpm: document.getElementById('bpmSlider').value
-    };
 
-    const encodedState = encodeURIComponent(JSON.stringify(gridState));
-    const url = `${window.location.origin}${window.location.pathname}?state=${encodedState}`;
-    return url;
+// グリッドのサイズ
+
+// セルのデータを取得する関数（アクティブ、拡大の状態を取得）
+function collectCellData() {
+    const cellData = [];
+
+    for (let row = 0; row < rows; row++) {
+        const rowData = [];
+
+        for (let col = 0; col < cols; col++) {
+            const cellIndex = row * cols + col;
+            // セルがアクティブまたは拡大されているかを確認し、その状態を保存
+            rowData.push({
+                active: activeCells.has(cellIndex),  // 色が塗られているか
+                enlarged: enlargedCells.has(cellIndex) // 拡大（三角や丸）
+            });
+        }
+
+        cellData.push(rowData);
+    }
+
+    return cellData;
 }
 
-// 保存ボタンをクリックしたときの処理
-document.getElementById('saveButton').addEventListener('click', function() {
-    const shareUrl = getGridState();
+// JSONデータをURLのクエリ形式に変換する関数
+function jsonToQueryString(json) {
+    return encodeURIComponent(JSON.stringify(json));
+}
 
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        alert('保存完了！URLがクリップボードにコピーされました。');
-    }).catch(err => {
-        console.error('クリップボードへのコピーに失敗しました:', err);
+// URLにクエリパラメータとしてデータを保存する関数
+function saveToUrl(jsonData) {
+    const queryString = jsonToQueryString(jsonData);
+    const newUrl = `${window.location.origin + window.location.pathname}?data=${queryString}`;
+    window.history.pushState({ path: newUrl }, '', newUrl);
+    return newUrl;
+}
+
+// 保存ボタンのクリックイベント
+document.addEventListener('DOMContentLoaded', () => {
+    const saveButton = document.getElementById('saveButton');
+    const urlDisplay = document.getElementById('urlDisplay'); // URLを表示するエリア
+
+    saveButton.addEventListener('click', () => {
+        const cellData = collectCellData();  // セルデータを収集
+        const newUrl = saveToUrl(cellData);  // URLを生成し保存
+
+        // URLを表示
+        urlDisplay.textContent = `編集用URL: ${newUrl}`;
+
+        // URLをクリップボードにコピー
+        navigator.clipboard.writeText(newUrl)
+            .then(() => {
+                alert('URLがクリップボードにコピーされました！');
+            })
+            .catch(err => {
+                console.error('クリップボードへのコピーに失敗しました:', err);
+            });
     });
 });
 
-// ページ読み込み時にURLから状態を復元する
-window.addEventListener('load', loadGridFromUrl);
-
-function loadGridFromUrl() {
+// URLからデータを解析して取得する関数
+function loadDataFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
-    const encodedState = urlParams.get('state');
-    
-    if (encodedState) {
-        const gridState = JSON.parse(decodeURIComponent(encodedState));
-        
-        activeCells.clear();
-        enlargedCells.clear();
-        
-        gridState.activeCells.forEach(cell => activeCells.add(cell));
-        gridState.enlargedCells.forEach(cell => enlargedCells.add(cell));
-        document.getElementById('bpmSlider').value = gridState.bpm;
-        
-        drawGrid();
+    const dataParam = urlParams.get('data');
+
+    if (dataParam) {
+        try {
+            const decodedData = decodeURIComponent(dataParam); // URLをデコード
+            const parsedData = JSON.parse(decodedData); // JSONに変換
+            return parsedData;
+        } catch (error) {
+            console.error('URLからデータの読み込みに失敗しました:', error);
+            return null;
+        }
     }
+
+    return null;
 }
 
-// その他の必要なコード（例：グリッド描画など）はそのまま使用
+// グリッドをURLから取得したデータで更新する関数
+function updateGridWithData(data) {
+    activeCells.clear();   // 現在のアクティブセルをクリア
+    enlargedCells.clear(); // 拡大セルもクリア
+
+    // データに基づいてセルを再構築
+    for (let row = 0; row < data.length; row++) {
+        for (let col = 0; col < data[row].length; col++) {
+            const cellIndex = row * cols + col;
+            const cellData = data[row][col];
+
+            if (cellData.active) {
+                activeCells.add(cellIndex); // アクティブなセルをセット
+            }
+
+            if (cellData.enlarged) {
+                enlargedCells.add(cellIndex); // 拡大セルをセット
+            }
+        }
+    }
+
+    drawGrid(); // グリッドを再描画
+}
+
+// ページが読み込まれた時に、URLに保存されたデータをグリッドに反映
+window.onload = () => {
+    const savedData = loadDataFromUrl(); // URLからデータを読み込む
+    if (savedData) {
+        updateGridWithData(savedData); // 読み込んだデータでグリッドを更新
+    }
+};

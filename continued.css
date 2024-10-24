@@ -19,8 +19,8 @@ body {
   position: absolute;
   top: 30px;
   left: 30px;
-  font-size: 35px;
-  padding: 10px 20px;
+  font-size: 30px;
+  padding: 15px 40px;
   background-color: #7FD34D;
   color: white;
   border: none;
@@ -48,7 +48,7 @@ h1 {
 .input-box {
   width: 80%;
   max-width: 500px;
-  padding: 15px;
+  padding: 25px;
   border-radius: 10px;
   border: none;
   font-size: 30px;
@@ -61,7 +61,7 @@ h1 {
 }
 
 .button {
-  font-size: 30px;
+  font-size: 35px;
   padding: 15px 40px;
   background-color: #F7A24F;
   color: white;
