@@ -1,3 +1,4 @@
+/*script.js */
 // キャンバスの設定
 const canvas = document.getElementById('musicGrid');
 const ctx = canvas.getContext('2d');
@@ -227,7 +228,7 @@ function getRowColor(row) {
     return colors[row % colors.length];
 }
 
-// グリッドを描画する関数
+
 // グリッドを描画する関数
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -245,7 +246,7 @@ function drawGrid() {
             ctx.fillRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight);
 
             // セルの枠線（通常の線）
-            ctx.strokeStyle = 'gray';
+            ctx.strokeStyle = '#00CED19';
             ctx.lineWidth = 1;
             ctx.strokeRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight);
 
@@ -255,7 +256,7 @@ function drawGrid() {
                 ctx.beginPath();
                 ctx.moveTo(col * cellWidth, (row + 1) * cellHeight); // 左端
                 ctx.lineTo((col + 1) * cellWidth, (row + 1) * cellHeight); // 右端
-                ctx.strokeStyle = 'gray'; // 線の色
+                ctx.strokeStyle = '#00CED1'; // 線の色
                 ctx.stroke();
                 ctx.lineWidth = 1; // 戻す
             }
@@ -266,11 +267,11 @@ function drawGrid() {
                 ctx.beginPath();
                 ctx.moveTo((col + 1) * cellWidth, row * cellHeight); // 上端
                 ctx.lineTo((col + 1) * cellWidth, (row + 1) * cellHeight); // 下端
-                ctx.strokeStyle = 'gray'; // 線の色
+                ctx.strokeStyle = '#00CED1'; // 線の色
                 ctx.stroke();
                 ctx.lineWidth = 1; // 戻す
             }
-
+           /*
             // 音階名を描画（ピアノ音源の行のみ）
             if (row < rows - 2) {
                 ctx.fillStyle = 'black';
@@ -279,7 +280,7 @@ function drawGrid() {
                 ctx.textBaseline = 'middle';
                 ctx.fillText(noteMapping[row], col * cellWidth + cellWidth / 2, row * cellHeight + cellHeight / 2);
             }
-
+           */
             // ドラムのセルを描画
             if (row === rows - 1) {
                 drawCircle(col, row, cellIndex);
@@ -417,36 +418,22 @@ bpmSlider.addEventListener('input', (event) => {
 
 // グリッドのサイズ
 
-// セルのデータを取得する関数（アクティブ、拡大の状態を取得）
+// セルのデータを取得（アクティブ、拡大の状態を取得）
 function collectCellData() {
-    const cellData = [];
-
-    for (let row = 0; row < rows; row++) {
-        const rowData = [];
-
-        for (let col = 0; col < cols; col++) {
+    return Array.from({ length: rows }, (_, row) =>
+        Array.from({ length: cols }, (_, col) => {
             const cellIndex = row * cols + col;
-            // セルがアクティブまたは拡大されているかを確認し、その状態を保存
-            rowData.push({
-                active: activeCells.has(cellIndex),  // 色が塗られているか
-                enlarged: enlargedCells.has(cellIndex) // 拡大（三角や丸）
-            });
-        }
-
-        cellData.push(rowData);
-    }
-
-    return cellData;
+            return {
+                active: activeCells.has(cellIndex),
+                enlarged: enlargedCells.has(cellIndex)
+            };
+        })
+    );
 }
 
-// JSONデータをURLのクエリ形式に変換する関数
-function jsonToQueryString(json) {
-    return encodeURIComponent(JSON.stringify(json));
-}
-
-// URLにクエリパラメータとしてデータを保存する関数
+// JSONデータをURLクエリ形式に変換
 function saveToUrl(jsonData) {
-    const queryString = jsonToQueryString(jsonData);
+    const queryString = encodeURIComponent(JSON.stringify(jsonData));
     const newUrl = `${window.location.origin + window.location.pathname}?data=${queryString}`;
     window.history.pushState({ path: newUrl }, '', newUrl);
     return newUrl;
@@ -454,74 +441,43 @@ function saveToUrl(jsonData) {
 
 // 保存ボタンのクリックイベント
 document.addEventListener('DOMContentLoaded', () => {
-    const saveButton = document.getElementById('saveButton');
-    const urlDisplay = document.getElementById('urlDisplay'); // URLを表示するエリア
-
-    saveButton.addEventListener('click', () => {
-        const cellData = collectCellData();  // セルデータを収集
-        const newUrl = saveToUrl(cellData);  // URLを生成し保存
-
-        // URLを表示
-        urlDisplay.textContent = `編集用URL: ${newUrl}`;
-
-        // URLをクリップボードにコピー
-        navigator.clipboard.writeText(newUrl)
-            .then(() => {
-                alert('URLがクリップボードにコピーされました！');
-            })
-            .catch(err => {
-                console.error('クリップボードへのコピーに失敗しました:', err);
-            });
+    document.getElementById('saveButton').addEventListener('click', () => {
+        const cellData = collectCellData();
+        const newUrl = saveToUrl(cellData);
+        window.location.href = `save.html?url=${encodeURIComponent(newUrl)}`;
     });
 });
 
-// URLからデータを解析して取得する関数
+// URLからデータを解析して取得
 function loadDataFromUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const dataParam = urlParams.get('data');
-
+    const dataParam = new URLSearchParams(window.location.search).get('data');
     if (dataParam) {
         try {
-            const decodedData = decodeURIComponent(dataParam); // URLをデコード
-            const parsedData = JSON.parse(decodedData); // JSONに変換
-            return parsedData;
+            return JSON.parse(decodeURIComponent(dataParam));
         } catch (error) {
-            console.error('URLからデータの読み込みに失敗しました:', error);
-            return null;
+            console.error('データの読み込みに失敗しました:', error);
         }
     }
-
     return null;
 }
 
-// グリッドをURLから取得したデータで更新する関数
-function updateGridWithData(data) {
-    activeCells.clear();   // 現在のアクティブセルをクリア
-    enlargedCells.clear(); // 拡大セルもクリア
-
-    // データに基づいてセルを再構築
-    for (let row = 0; row < data.length; row++) {
-        for (let col = 0; col < data[row].length; col++) {
-            const cellIndex = row * cols + col;
-            const cellData = data[row][col];
-
-            if (cellData.active) {
-                activeCells.add(cellIndex); // アクティブなセルをセット
-            }
-
-            if (cellData.enlarged) {
-                enlargedCells.add(cellIndex); // 拡大セルをセット
-            }
-        }
-    }
-
-    drawGrid(); // グリッドを再描画
-}
-
-// ページが読み込まれた時に、URLに保存されたデータをグリッドに反映
-window.onload = () => {
-    const savedData = loadDataFromUrl(); // URLからデータを読み込む
+// ページ読み込み時のデータ復元
+window.addEventListener('DOMContentLoaded', () => {
+    const savedData = loadDataFromUrl();
     if (savedData) {
-        updateGridWithData(savedData); // 読み込んだデータでグリッドを更新
+        activeCells.clear();
+        enlargedCells.clear();
+        savedData.forEach((row, rowIndex) =>
+            row.forEach((cell, colIndex) => {
+                const cellIndex = rowIndex * cols + colIndex;
+                if (cell.active) activeCells.add(cellIndex);
+                if (cell.enlarged) enlargedCells.add(cellIndex);
+            })
+        );
+        drawGrid();
     }
-};
+});
+
+
+
+

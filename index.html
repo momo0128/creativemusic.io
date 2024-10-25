@@ -1,10 +1,10 @@
-<!--index-->
+<!--index.html-->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>卒業制作
+    <title>テスト01
     </title>
     <link rel="stylesheet" href="styles.css">
     <link rel="shortcut icon" href="onpu.png">
@@ -25,24 +25,22 @@
 
    
 
-
-
-
     <div id="musical-score">
-        <canvas id="staffCanvas" width="1200" height="200"></canvas>
+        <canvas id="staffCanvas" width="2736" height="200"></canvas>
     </div>
-    <canvas id="musicGrid" width="1366" height="400"></canvas>
 
-        <button id="playStopButton">再生</button>
-        <input type="range" id="bpmSlider" min="40" max="200" value="120">
-        <span id="bpmDisplay">BPM: 120</span>
+    <div id="grid">
+    <canvas id="musicGrid" width="1700" height="680"></canvas>
+</div>
+        
     </div>
     <div id="topbar">
      
-
+        <button id="playStopButton">再生</button>
+        <input type="range" id="bpmSlider" min="40" max="200" value="120">
+        <span id="bpmDisplay">BPM: 120</span>
         <button id="saveButton">保存</button>
         <div id="urlDisplay"></div>
-        <button id="moveButton"><a href="save.html">セーブ画面へ</a>
         </button>
         
         <script>

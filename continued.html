@@ -1,3 +1,4 @@
+<!--continued.html-->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -11,8 +12,60 @@
     <button class="back-button"><a href="intro.html">もどる</a></button>
     <div class="container">
         <h1>ほぞんリンクをにゅうりょくする</h1>
-        <input type="url" class="input-box" placeholder="URLをここに">
-        <button class="button">つぎへ</button>
+        <input type="url" id="urlInput" class="input-box" placeholder="URLをここに">
+        <button class="button" onclick="handleContinue()">つぎへ</button>
+        <div id="errorMessage" style="color: red; margin-top: 10px; display: none;">
+            正しいURLを入力してください
+        </div>
     </div>
+
+    <script>
+        function handleContinue() {
+            const urlInput = document.getElementById('urlInput');
+            const errorMessage = document.getElementById('errorMessage');
+            const url = urlInput.value.trim();
+
+            // URLが空の場合
+            if (!url) {
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            try {
+                // URLからデータパラメータを抽出
+                const urlObj = new URL(url);
+                const dataParam = urlObj.searchParams.get('data');
+
+                if (!dataParam) {
+                    throw new Error('Invalid URL');
+                }
+
+                // データの形式を確認（JSONとしてパース可能か）
+                JSON.parse(decodeURIComponent(dataParam));
+
+                // 有効なデータを含むURLの場合、index.htmlに遷移
+                window.location.href = `index.html?data=${dataParam}`;
+
+            } catch (error) {
+                // URLが無効な場合やデータの形式が正しくない場合
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        // エンターキーでも続行できるようにする
+        document.getElementById('urlInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                handleContinue();
+            }
+        });
+
+        // 入力時にエラーメッセージを非表示にする
+        document.getElementById('urlInput').addEventListener('input', function() {
+            document.getElementById('errorMessage').style.display = 'none';
+        });
+    </script>
+
+    <script src="script.js"></script>
+    
 </body>
 </html>
