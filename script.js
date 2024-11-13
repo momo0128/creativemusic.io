@@ -1,13 +1,82 @@
 /*script.js */
-// キャンバスの設定
+// 既存のキャンバス設定の後に追加
 const canvas = document.getElementById('musicGrid');
 const ctx = canvas.getContext('2d');
+
+// 既存のグリッド設定の近くに追加
+const STAVE_MARGIN_LEFT = 40;  // 五線譜の左マージン
+const STAVE_WIDTH = 1200;      // 五線譜の幅
+
+// 五線譜の設定と描画用の変数を追加
+let vf;
+let context;
+let stave;
+let notes = [];
+
+// 音符の順序を定義
+const NOTE_ORDER = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+
+// 音符と色の対応を定義
+const noteColors = {
+    'B5': 'orange',
+    'A5': 'peru',
+    'G5': 'green',
+    'F5': 'lawngreen',
+    'E5': 'deepskyblue',
+    'D5': 'plum',
+    'C5': 'hotpink',
+    'B4': 'orange',
+    'A4': 'peru',
+    'G4': 'green',
+    'F4': 'lawngreen',
+    'E4': 'deepskyblue',
+    'D4': 'plum',
+    'C4': 'hotpink'
+};
+
 
 // グリッドの寸法設定
 const rows = 16;
 const cols = 32;
-const cellWidth = canvas.width / cols;
-const cellHeight = canvas.height / rows;
+let cellWidth;
+let cellHeight;
+
+// キャンバスのリサイズ処理
+function resizeCanvas() {
+    const gridContainer = document.getElementById('grid');
+    const containerWidth = gridContainer.clientWidth;
+    const containerHeight = gridContainer.clientHeight;
+    
+    // コンテナのアスペクト比を維持しながら、
+    // セルが見やすいサイズになるように調整
+    const minCellSize = 20; // 最小セルサイズ
+    const idealCellWidth = Math.floor(containerWidth / cols);
+    const idealCellHeight = Math.floor(containerHeight / rows);
+    
+    // セルサイズが最小値を下回らないように調整
+    cellWidth = Math.max(minCellSize, idealCellWidth);
+    cellHeight = Math.max(minCellSize, idealCellHeight);
+    
+    // キャンバスのサイズを設定
+    canvas.width = cellWidth * cols;
+    canvas.height = cellHeight * rows;
+    
+    drawGrid();
+}
+
+// ウィンドウリサイズ時のデバウンス処理を修正
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        resizeCanvas();
+        initializeStave(); // この行を追加
+        updateNotes();     // この行を追加
+    }, 100);
+});
+
+// 初期化時のリサイズ
+window.addEventListener('load', resizeCanvas);
 
 // アクティブなセルと拡大されたセルを追跡するためのSet
 const activeCells = new Set();
@@ -18,35 +87,105 @@ let currentColumn = -1;
 let playInterval = null;
 let isPlaying = false;
 
-// オーディオコンテキストの作成
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 // オーディオファイルのパスを音階に対応させてマッピング
-const audioFiles = {
-    'C3': 'piano/piano_ongen/AnyConv.com__piano1-do.mp3',
-    'D3': 'piano/piano_ongen/AnyConv.com__piano1-re.mp3',
-    'E3': 'piano/piano_ongen/AnyConv.com__piano1-mi.mp3',
-    'F3': 'piano/piano_ongen/AnyConv.com__piano1-fa.mp3',
-    'G3': 'piano/piano_ongen/AnyConv.com__piano1-so.mp3',
-    'A3': 'piano/piano_ongen/AnyConv.com__piano1-ra.mp3',
-    'B3': 'piano/piano_ongen/AnyConv.com__piano1-shi.mp3',
-    'C4': 'piano/piano_ongen/AnyConv.com__piano2-do.mp3',
-    'D4': 'piano/piano_ongen/AnyConv.com__piano2-re.mp3',
-    'E4': 'piano/piano_ongen/AnyConv.com__piano2-mi.mp3',
-    'F4': 'piano/piano_ongen/AnyConv.com__piano2-fa.mp3',
-    'G4': 'piano/piano_ongen/AnyConv.com__piano2-so.mp3',
-    'A4': 'piano/piano_ongen/AnyConv.com__piano2-ra.mp3',
-    'B4': 'piano/piano_ongen/AnyConv.com__piano2-shi.mp3',
-   
-    
+// 楽器の音源マッピング
+// 楽器の音源マッピングを更新
+
+// ドラム音源のパスを定義（上部に移動）
+const drumSounds = {
+    kick: 'drum/drum/drum00.mp3',
+    snare: 'drum/drum/drum01.mp3'
 };
+
+
+
+const instruments = {
+    piano: {
+        'C4': 'piano/piano_ongen/AnyConv.com__piano1-do.mp3',
+        'D4': 'piano/piano_ongen/AnyConv.com__piano1-re.mp3',
+        'E4': 'piano/piano_ongen/AnyConv.com__piano1-mi.mp3',
+        'F4': 'piano/piano_ongen/AnyConv.com__piano1-fa.mp3',
+        'G4': 'piano/piano_ongen/AnyConv.com__piano1-so.mp3',
+        'A4': 'piano/piano_ongen/AnyConv.com__piano1-ra.mp3',
+        'B4': 'piano/piano_ongen/AnyConv.com__piano1-shi.mp3',
+        'C5': 'piano/piano_ongen/AnyConv.com__piano2-do.mp3',
+        'D5': 'piano/piano_ongen/AnyConv.com__piano2-re.mp3',
+        'E5': 'piano/piano_ongen/AnyConv.com__piano2-mi.mp3',
+        'F5': 'piano/piano_ongen/AnyConv.com__piano2-fa.mp3',
+        'G5': 'piano/piano_ongen/AnyConv.com__piano2-so.mp3',
+        'A5': 'piano/piano_ongen/AnyConv.com__piano2-ra.mp3',
+        'B5': 'piano/piano_ongen/AnyConv.com__piano2-shi.mp3'
+    },
+    trumpet: {
+        'C4': 'trumpet/trumpet_ongen/trumpet-do.mp3',
+        'D4': 'trumpet/trumpet_ongen/trumpet-re.mp3',
+        'E4': 'trumpet/trumpet_ongen/trumpet-mi.mp3',
+        'F4': 'trumpet/trumpet_ongen/trumpet-fa.mp3',
+        'G4': 'trumpet/trumpet_ongen/trumpet-so.mp3',
+        'A4': 'trumpet/trumpet_ongen/trumpet-ra.mp3',
+        'B4': 'trumpet/trumpet_ongen/trumpet-shi.mp3',
+        'C5': 'trumpet/trumpet_ongen/trumpet-do1.mp3',
+        'D5': 'trumpet/trumpet_ongen/trumpet-re1.mp3',
+        'E5': 'trumpet/trumpet_ongen/trumpet-mi1.mp3',
+        'F5': 'trumpet/trumpet_ongen/trumpet-fa1.mp3',
+        'G5': 'trumpet/trumpet_ongen/trumpet-so1.mp3',
+        'A5': 'trumpet/trumpet_ongen/trumpet-ra1.mp3',
+        'B5': 'trumpet/trumpet_ongen/trumpet-shi1.mp3'
+    },
+    guitar: {
+        'C4': 'guitar/guitar_ongen/guitar-do.mp3',
+        'D4': 'guitar/guitar_ongen/guitar-re.mp3',
+        'E4': 'guitar/guitar_ongen/guitar-mi.mp3',
+        'F4': 'guitar/guitar_ongen/guitar-fa.mp3',
+        'G4': 'guitar/guitar_ongen/guitar-so.mp3',
+        'A4': 'guitar/guitar_ongen/guitar-ra.mp3',
+        'B4': 'guitar/guitar_ongen/guitar-shi.mp3',
+        'C5': 'guitar/guitar_ongen/guitar-do1.mp3',
+        'D5': 'guitar/guitar_ongen/guitar-re1.mp3',
+        'E5': 'guitar/guitar_ongen/guitar-mi1.mp3',
+        'F5': 'guitar/guitar_ongen/guitar-fa1.mp3',
+        'G5': 'guitar/guitar_ongen/guitar-so1.mp3',
+        'A5': 'guitar/guitar_ongen/guitar-ra1.mp3',
+        'B5': 'guitar/guitar_ongen/guitar-shi1.mp3'
+    },
+    violin: {
+        'C4': 'violin/violin_ongen/violin-do.mp3',
+        'D4': 'violin/violin_ongen/violin-re.mp3',
+        'E4': 'violin/violin_ongen/violin-mi.mp3',
+        'F4': 'violin/violin_ongen/violin-fa.mp3',
+        'G4': 'violin/violin_ongen/violin-so.mp3',
+        'A4': 'violin/violin_ongen/violin-ra.mp3',
+        'B4': 'violin/violin_ongen/violin-shi.mp3',
+        'C5': 'violin/violin_ongen/violin-do1.mp3',
+        'D5': 'violin/violin_ongen/violin-re1.mp3',
+        'E5': 'violin/violin_ongen/violin-mi1.mp3',
+        'F5': 'violin/violin_ongen/violin-fa1.mp3',
+        'G5': 'violin/violin_ongen/violin-so1.mp3',
+        'A5': 'violin/violin_ongen/violin-ra1.mp3',
+        'B5': 'violin/violin_ongen/violin-shi1.mp3'
+    }
+};
+
+// 現在選択されている楽器を追跡する変数を追加
+let currentInstrument = 'piano';
 
 // 音階のマッピング
 
-const noteMapping = ['B4', 'A4', 'G4', 'F4', 'E4', 'D4', 'C4', 'B3', 'A3', 'G3', 'F3', 'E3', 'D3', 'C3'];
+const noteMapping = ['B5', 'A5', 'G5', 'F5', 'E5', 'D5', 'C5', 'B4', 'A4', 'G4', 'F4', 'E4', 'D4', 'C4'];
 
 // キャンバスのクリックイベントリスナーを設定
 canvas.addEventListener('click', handleCanvasClick);
+
+// アクティブなセルをトグルする関数
+function toggleActiveCell(cellIndex) {
+    if (activeCells.has(cellIndex)) {
+        activeCells.delete(cellIndex);
+    } else {
+        activeCells.add(cellIndex);
+    }
+    updateNotes(); // この行を追加
+}
 
 // キャンバスのクリックを処理する関数
 function handleCanvasClick(event) {
@@ -68,14 +207,7 @@ function handleCanvasClick(event) {
     drawGrid();
 }
 
-// アクティブなセルをトグルする関数
-function toggleActiveCell(cellIndex) {
-    if (activeCells.has(cellIndex)) {
-        activeCells.delete(cellIndex);
-    } else {
-        activeCells.add(cellIndex);
-    }
-}
+
 
 // 拡大されたセルをトグルする関数
 function toggleEnlargedCell(cellIndex) {
@@ -87,32 +219,56 @@ function toggleEnlargedCell(cellIndex) {
 }
 
 // 行から音階への変換関数
+// rowToNote関数を確認・修正
 function rowToNote(row) {
     if (row < rows - 2) { // ピアノ音源用の行
         return noteMapping[row];
     } else if (row === rows - 2) { // スネアドラム用の行
         return 'snare';
-    } else { // キックドラム用の行
+    } else if (row === rows - 1) { // キックドラム用の行
         return 'kick';
     }
 }
 
 // 音源を再生する関数
+// playSound関数を以下のように更新
 function playSound(cellIndex, duration = 1) {
     const row = Math.floor(cellIndex / cols);
     const note = rowToNote(row);
+    
+    console.log('Playing note:', note, 'Row:', row);
 
-    if (note === 'kick') {
-        playDrumSound('kick', duration);
-    } else if (note === 'snare') {
-        playDrumSound('snare', duration);
+    if (note === 'kick' || note === 'snare') {
+        if (drumSounds[note]) {
+            console.log('Playing drum sound:', drumSounds[note]);
+            const audio = new Audio(drumSounds[note]);
+            audio.volume = 0.5;
+            
+            audio.play()
+                .then(() => {
+                    console.log(`${note} sound played successfully`);
+                })
+                .catch(error => {
+                    console.error(`Error playing ${note} sound:`, error);
+                });
+        } else {
+            console.error(`Drum sound not found for ${note}`);
+        }
     } else {
-        const audioFile = audioFiles[note];
+        const audioFile = instruments[currentInstrument][note];
         if (audioFile) {
             const audio = new Audio(audioFile);
-            audio.play();
-            setTimeout(() => audio.pause(), duration * 1000);
+            audio.volume = 0.5;
+            audio.play()
+                .catch(error => console.error('音源の再生に失敗:', error));
         }
+    }
+
+    if (duration) {
+        setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0;
+        }, duration * 1000);
     }
 }
 // ... (前のコードの大部分は変更なし)
@@ -155,8 +311,11 @@ function handleCanvasClick(event) {
 }
 
 // シーケンスを再生する関数を更新
+// playSequence関数を更新
 function playSequence() {
     currentColumn = 0;
+    const intervalTime = (60 / bpm) * 1000; // BPMに基づいた間隔
+
     playInterval = setInterval(() => {
         if (currentColumn >= cols) {
             currentColumn = 0;
@@ -167,58 +326,70 @@ function playSequence() {
             const cellIndex = row * cols + currentColumn;
             if ((row < rows - 2 && activeCells.has(cellIndex)) || 
                 (row >= rows - 2 && enlargedCells.has(cellIndex))) {
-                playSound(cellIndex);
+                playSound(cellIndex, 0.5); // 各音を0.5秒で再生
             }
         }
 
         drawGrid();
         currentColumn++;
-    }, 500); // 500ミリ秒ごとに次の列に移動
+    }, intervalTime);
 }
 
 
-// ドラムサウンドを再生する関数（例：キック・スネア）
-function playDrumSound(type, duration) {
-    if (type === 'kick') {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
 
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+// デバッグ用：ドラムサウンドのパスを確認
+console.log('Drum sounds configuration:', drumSounds);
 
-        oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-        gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+function playSound(cellIndex, duration = 1) {
+    const row = Math.floor(cellIndex / cols);
+    const note = rowToNote(row);
+    
+    // デバッグ用ログ
+    console.log('Row:', row);
+    console.log('Note type:', note);
 
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + duration);
-    } else if (type === 'snare') {
-        const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * duration, audioContext.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < output.length; i++) {
-            output[i] = Math.random() * 2 - 1;
+    if (note === 'kick' || note === 'snare') {
+        // デバッグ用ログ
+        console.log('Playing drum sound:', note);
+        console.log('Drum sound path:', drumSounds[note]);
+        
+        const audio = new Audio(drumSounds[note]);
+        audio.volume = 0.5;
+        
+        // エラーハンドリングを追加
+        audio.play()
+            .then(() => {
+                console.log(`${note} sound played successfully`);
+            })
+            .catch(error => {
+                console.error(`Error playing ${note} sound:`, error);
+            });
+        
+        if (duration) {
+            setTimeout(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }, duration * 1000);
         }
-        const noise = audioContext.createBufferSource();
-        noise.buffer = noiseBuffer;
-        const noiseGain = audioContext.createGain();
-        noiseGain.gain.setValueAtTime(1, audioContext.currentTime);
-        noiseGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-        noise.connect(noiseGain).connect(audioContext.destination);
-        noise.start();
-
-        const snareOscillator = audioContext.createOscillator();
-        snareOscillator.type = 'triangle';
-        snareOscillator.frequency.setValueAtTime(100, audioContext.currentTime);
-        snareOscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + duration);
-        const snareGain = audioContext.createGain();
-        snareGain.gain.setValueAtTime(0.7, audioContext.currentTime);
-        snareGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-        snareOscillator.connect(snareGain).connect(audioContext.destination);
-        snareOscillator.start();
-        snareOscillator.stop(audioContext.currentTime + duration);
+    } else {
+        // 既存の楽器音源の処理
+        const audioFile = instruments[currentInstrument][note];
+        if (audioFile) {
+            const audio = new Audio(audioFile);
+            audio.volume = 0.5;
+            audio.play()
+                .catch(error => console.error('音源の再生に失敗:', error));
+            
+            if (duration) {
+                setTimeout(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }, duration * 1000);
+            }
+        }
     }
 }
+
 
 // 行の色を取得する関数
 function getRowColor(row) {
@@ -230,6 +401,7 @@ function getRowColor(row) {
 
 
 // グリッドを描画する関数
+// グリッドを描画する関数も更新
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -245,42 +417,33 @@ function drawGrid() {
             }
             ctx.fillRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight);
 
-            // セルの枠線（通常の線）
-            ctx.strokeStyle = '#00CED19';
+            // セルの枠線
+            ctx.strokeStyle = '#00CED1';
             ctx.lineWidth = 1;
             ctx.strokeRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight);
 
-            // C4の下の枠線を太くする
-            if (row === 6) { // C4の行は6
-                ctx.lineWidth = 4; // 太い線
+            // C4の下の枠線を太く
+            if (row === 13) {
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(col * cellWidth, (row + 1) * cellHeight); // 左端
-                ctx.lineTo((col + 1) * cellWidth, (row + 1) * cellHeight); // 右端
-                ctx.strokeStyle = '#00CED1'; // 線の色
+                ctx.moveTo(col * cellWidth, (row + 1) * cellHeight);
+                ctx.lineTo((col + 1) * cellWidth, (row + 1) * cellHeight);
+                ctx.strokeStyle = '#00CED1';
                 ctx.stroke();
-                ctx.lineWidth = 1; // 戻す
+                ctx.lineWidth = 1;
             }
 
-            // 偶数列の右側の枠線を太くする
-            if (col % 2 === 0) {
-                ctx.lineWidth = 5; // 太い線
+            // 4列ごとに区切り線を太く
+            if (col % 4 === 0) {
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo((col + 1) * cellWidth, row * cellHeight); // 上端
-                ctx.lineTo((col + 1) * cellWidth, (row + 1) * cellHeight); // 下端
-                ctx.strokeStyle = '#00CED1'; // 線の色
+                ctx.moveTo(col * cellWidth, 0);
+                ctx.lineTo(col * cellWidth, canvas.height);
+                ctx.strokeStyle = '#00CED1';
                 ctx.stroke();
-                ctx.lineWidth = 1; // 戻す
+                ctx.lineWidth = 1;
             }
-           /*
-            // 音階名を描画（ピアノ音源の行のみ）
-            if (row < rows - 2) {
-                ctx.fillStyle = 'black';
-                ctx.font = '10px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(noteMapping[row], col * cellWidth + cellWidth / 2, row * cellHeight + cellHeight / 2);
-            }
-           */
+
             // ドラムのセルを描画
             if (row === rows - 1) {
                 drawCircle(col, row, cellIndex);
@@ -293,7 +456,194 @@ function drawGrid() {
     if (currentColumn >= 0) {
         highlightCurrentColumn();
     }
+    
+    updateNotes();
 }
+
+
+// 五線譜の初期化関数
+// 五線譜の初期化関数を修正
+// 五線譜の初期化関数を修正
+function initializeStave() {
+    try {
+        const div = document.getElementById('musical-score');
+        if (!div) {
+            console.error('musical-score element not found');
+            return false;
+        }
+
+        while (div.firstChild) {
+            div.removeChild(div.firstChild);
+        }
+
+        const renderer = new Vex.Flow.Renderer(
+            div,
+            Vex.Flow.Renderer.Backends.SVG
+        );
+
+        // レンダラーのサイズを調整
+        renderer.resize(STAVE_WIDTH + 100, 120);
+        context = renderer.getContext();
+
+        if (!context) {
+            throw new Error('Failed to get rendering context');
+        }
+
+        // 五線譜のY位置を調整
+        const staveY = 0;
+
+        // ト音記号用の五線譜
+        const clefStave = new Vex.Flow.Stave(10, staveY, 50);
+        clefStave.addClef('treble');
+        clefStave.setContext(context);
+        clefStave.draw();
+
+        // メインの五線譜
+        stave = new Vex.Flow.Stave(60, staveY, STAVE_WIDTH);
+        stave.setContext(context);
+        
+        // 小節線を非表示に
+        stave.setEndBarType(Vex.Flow.Barline.type.NONE);
+        stave.draw();
+
+        // 五線の位置を取得
+        const staveInfo = stave.getYForLine(0); // 第一線のY座標
+        const lineSpacing = stave.getSpacingBetweenLines();
+        const totalLines = 5;
+
+        // 小節線を描画
+        const columnWidth = STAVE_WIDTH / cols;
+        for (let i = 0; i <= cols; i++) {
+            const x = 60 + (i * columnWidth);
+            const lineWidth = i % 4 === 0 ? 1 : 0.5;
+            const lineColor = i % 4 === 0 ? '#000000' : '#666666';
+            
+            context.beginPath();
+            context.moveTo(x, staveInfo);  // 第一線から
+            context.lineTo(x, staveInfo + (lineSpacing * (totalLines - 1))); // 第五線まで
+            context.strokeStyle = lineColor;
+            context.lineWidth = lineWidth;
+            context.stroke();
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error initializing stave:', error);
+        return false;
+    }
+}
+
+function updateNotes() {
+    try {
+        if (!context || !stave) {
+            if (!initializeStave()) return;
+        }
+
+        context.clear();
+        
+        // 五線譜の再描画
+        const staveY = 0;
+        const clefStave = new Vex.Flow.Stave(10, staveY, 50);
+        clefStave.addClef('treble');
+        clefStave.setContext(context);
+        clefStave.draw();
+
+        stave.setContext(context);
+        stave.draw();
+
+        // 小節線の再描画
+        const staveInfo = stave.getYForLine(0);
+        const lineSpacing = stave.getSpacingBetweenLines();
+        const totalLines = 5;
+        const columnWidth = STAVE_WIDTH / cols;
+
+        for (let i = 0; i <= cols; i++) {
+            const x = 60 + (i * columnWidth);
+            const lineWidth = i % 4 === 0 ? 1 : 0.5;
+            const lineColor = i % 4 === 0 ? '#000000' : '#666666';
+            
+            context.beginPath();
+            context.moveTo(x, staveInfo);
+            context.lineTo(x, staveInfo + (lineSpacing * (totalLines - 1)));
+            context.strokeStyle = lineColor;
+            context.lineWidth = lineWidth;
+            context.stroke();
+        }
+
+        // 音符の処理
+        for (let col = 0; col < cols; col++) {
+            const notesInThisColumn = [];
+            
+            for (let row = 0; row < rows - 2; row++) {
+                const cellIndex = row * cols + col;
+                if (activeCells.has(cellIndex)) {
+                    const note = noteMapping[row];
+                    notesInThisColumn.push({
+                        note: note,
+                        color: noteColors[note]
+                    });
+                }
+            }
+
+            if (notesInThisColumn.length > 0) {
+                // 音符をソート
+                notesInThisColumn.sort((a, b) => {
+                    const aOctave = parseInt(a.note.slice(-1));
+                    const bOctave = parseInt(b.note.slice(-1));
+                    if (aOctave !== bOctave) return aOctave - bOctave;
+                    
+                    const noteOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+                    const aNote = a.note.slice(0, -1);
+                    const bNote = b.note.slice(0, -1);
+                    return noteOrder.indexOf(aNote) - noteOrder.indexOf(bNote);
+                });
+
+                const keys = notesInThisColumn.map(n => 
+                    n.note.toLowerCase().replace(/(\w)(\d)/, '$1/$2')
+                );
+
+                try {
+                    // 全音符として音符を作成
+                    const staveNote = new Vex.Flow.StaveNote({
+                        clef: "treble",
+                        keys: keys,
+                        duration: "w",  // 'w' は whole note (全音符) を表す
+                        auto_stem: false // 符幹なしに設定
+                    });
+
+                    // 音符の色を設定
+                    notesInThisColumn.forEach((noteInfo, i) => {
+                        staveNote.setKeyStyle(i, { 
+                            fillStyle: noteInfo.color,
+                            strokeStyle: noteInfo.color
+                        });
+                    });
+
+                    staveNote.setStave(stave);
+                    
+                    // 音符の位置を設定
+                    const noteX = 60 + (columnWidth * col);
+                    const tickContext = new Vex.Flow.TickContext()
+                        .setX(noteX)
+                        .setPadding(0);
+                    
+                    staveNote.setTickContext(tickContext);
+                    staveNote.draw();
+
+                } catch (e) {
+                    console.error('Error creating note:', e);
+                }
+            }
+        }
+
+    } catch (error) {
+        console.error('Error updating notes:', error);
+    }
+}
+
+
+
+
 
 
 
@@ -439,13 +789,43 @@ function saveToUrl(jsonData) {
     return newUrl;
 }
 
-// 保存ボタンのクリックイベント
+// DOMContentLoadedイベントリスナーを以下のように変更
+// 初期化時に五線譜を設定
+// DOMContentLoadedイベントリスナーを修正
 document.addEventListener('DOMContentLoaded', () => {
+    // 既存の初期化コード
+    resizeCanvas();
+    initializeStave(); // この行を追加
+    
+    // 保存ボタンのクリックイベント設定
     document.getElementById('saveButton').addEventListener('click', () => {
         const cellData = collectCellData();
         const newUrl = saveToUrl(cellData);
         window.location.href = `save.html?url=${encodeURIComponent(newUrl)}`;
     });
+
+    // 楽器選択のイベントリスナーを設定
+    const instrumentSelect = document.getElementById('instrumentSelect');
+    instrumentSelect.addEventListener('change', (event) => {
+        currentInstrument = event.target.value;
+        console.log('Selected instrument:', currentInstrument);
+    });
+
+    // URLからのデータ読み込み
+    const savedData = loadDataFromUrl();
+    if (savedData) {
+        activeCells.clear();
+        enlargedCells.clear();
+        savedData.forEach((row, rowIndex) =>
+            row.forEach((cell, colIndex) => {
+                const cellIndex = rowIndex * cols + colIndex;
+                if (cell.active) activeCells.add(cellIndex);
+                if (cell.enlarged) enlargedCells.add(cellIndex);
+            })
+        );
+        drawGrid();
+        updateNotes(); // この行を追加
+    }
 });
 
 // URLからデータを解析して取得

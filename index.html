@@ -1,55 +1,25 @@
-<!--index.html-->
+<!--intro-->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>テスト01
-    </title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Creative Music</title>
+    <link rel="stylesheet" href="intro.css">
     <link rel="shortcut icon" href="onpu.png">
-   
-
-   
-
-
+    <!-- ここからGoogleフォント -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+  <!-- ここまでGoogleフォント -->
 </head>
 <body>
-    <div id="topbar">
-        This is the top bar content.
-        <button id="homeButton"><a href="intro.html">ホームへ</a></button>
+    <div class="container">
+        <h1>Creative Music <span class="music-notes">♪♫</span></h1>
+        <div class="button blue"><a href=continued.html><ruby>続<rt>つづ</rt>きからスタート</a></ruby></div>
+        <div class="button green"><a><ruby>説明<rt>せつめい</rt></ruby></a></div>
+        <div class="button orange"><a href=create.html>スタート</a></div>
     </div>
-    <div id="musical-score">
-        This is the musical-score content.
-    </div>
-
-   
-
-    <div id="musical-score">
-        <canvas id="staffCanvas" width="2736" height="200"></canvas>
-    </div>
-
-    <div id="grid">
-    <canvas id="musicGrid" width="1700" height="680"></canvas>
-</div>
-        
-    </div>
-    <div id="topbar">
-     
-        <button id="playStopButton">再生</button>
-        <input type="range" id="bpmSlider" min="40" max="200" value="120">
-        <span id="bpmDisplay">BPM: 120</span>
-        <button id="saveButton">保存</button>
-        <div id="urlDisplay"></div>
-        </button>
-        
-        <script>
-            
-        </script>
-    </div>
-    <script src="https://unpkg.com/vexflow/releases/vexflow-min.js"></script>
-    <script src="audioManager.js"></script>
-<script src="script.js"></script>
-    
 </body>
 </html>
+

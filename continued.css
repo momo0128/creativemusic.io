@@ -12,7 +12,7 @@ body {
   align-items: center;
   height: 100vh;
   position: relative;
-  
+  font-family: 'Lato', 'Noto Sans JP',sans-serif;
 }
 
 .back-button {
@@ -73,3 +73,22 @@ h1 {
 .button:hover {
   background-color: #f7913f;
 }
+
+.button a{
+  text-decoration: none;
+  color: white;
+}
+.back-button a{
+  text-decoration: none;
+  color: white;
+  font-size: 30px;
+}
+
+.container .errorMessage ruby rt{
+  color: red;
+}
+
+rt { color: white; 
+  font-size: 15px;
+  position: relative }
+

@@ -7,15 +7,20 @@
     <title>URL Input</title>
     <link rel="stylesheet" href="continued.css">
     <link rel="shortcut icon" href="onpu.png">
+    <!-- ここからGoogleフォント -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+  <!-- ここまでGoogleフォント -->
 </head>
 <body>
-    <button class="back-button"><a href="intro.html">もどる</a></button>
+    <button class="back-button"><a href="index.html"><ruby>戻<rt>もど</rt></ruby>る</a></button>
     <div class="container">
-        <h1>ほぞんリンクをにゅうりょくする</h1>
-        <input type="url" id="urlInput" class="input-box" placeholder="URLをここに">
-        <button class="button" onclick="handleContinue()">つぎへ</button>
+        <h1><ruby>保存<rt>ほぞん</rt></ruby>したURLを<ruby>入力<rt>にゅうりょく</rt></ruby>してください</h1>
+        <input type="url" id="urlInput" class="input-box" placeholder="URLをペースト">
+        <button class="button" onclick="handleContinue()"><ruby>次<rt>つぎ</rt></ruby>へ</button>
         <div id="errorMessage" style="color: red; margin-top: 10px; display: none;">
-            正しいURLを入力してください
+            URLを<ruby>入力<rt>にゅうりょく</rt></ruby>してください
         </div>
     </div>
 
@@ -44,7 +49,7 @@
                 JSON.parse(decodeURIComponent(dataParam));
 
                 // 有効なデータを含むURLの場合、index.htmlに遷移
-                window.location.href = `index.html?data=${dataParam}`;
+                window.location.href = `create.html?data=${dataParam}`;
 
             } catch (error) {
                 // URLが無効な場合やデータの形式が正しくない場合

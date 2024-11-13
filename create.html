@@ -1,0 +1,61 @@
+<!--create.html-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卒業制作
+    </title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="shortcut icon" href="onpu.png">
+   
+
+   
+
+
+</head>
+<body>
+    <div id="topbar">
+        This is the top bar content.
+        <button id="homeButton"><a href="index.html">ホームへ</a></button>
+    </div>
+    
+
+   
+
+    <div id="musical-score" style="width: 100%; height: 150px;"></div>
+    
+    <!-- VexFlowライブラリの読み込み -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vexflow/3.0.9/vexflow.min.js"></script>
+
+    <div id="grid">
+    <canvas id="musicGrid" height="75vh" width="90%" ></canvas>
+</div>
+
+
+
+    </div>
+    <div id="topbar">
+        <button id="playStopButton">再生</button>
+        <input type="range" id="bpmSlider" min="40" max="200" value="120">
+        <span id="bpmDisplay">BPM: 120</span>
+        <button id="saveButton">保存</button>
+        <!-- 楽器選択ボタンを追加 -->
+        <select id="instrumentSelect">
+            <option value="piano">ピアノ</option>
+            <option value="trumpet">トランペット</option>
+            <option value="guitar">ギター</option>
+            <option value="violin">バイオリン</option>
+        </select>
+        
+        <script>
+            
+        </script>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vexflow/3.0.9/vexflow.min.js"></script>
+    <script src="https://unpkg.com/vexflow/releases/vexflow-min.js"></script>
+    <script src="audioManager.js"></script>
+<script src="script.js"></script>
+    
+</body>
+</html>

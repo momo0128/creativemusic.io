@@ -11,18 +11,21 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
+  font-family: 'Lato', 'Noto Sans JP',sans-serif;
 }
 
 .container {
   text-align: center;
+  
 }
 
 h1 {
   font-size: 80px;
   color: white;
-  font-weight: bold;
+  font-weight:700px;
   margin-bottom: 50px;
   position: relative;
+ 
 }
 
 .music-notes {
@@ -35,20 +38,43 @@ h1 {
   font-size: 45px;
   padding: 20px 40px;
   margin: 15px;
-  border-radius: 15px;
-  color: white;
+  border-radius: 15px; 
   cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+
+
+
+
+.container a{
+  text-decoration: none;
+  color:white;
   font-family: "MS ゴシック" ;
 }
+
 
 .blue {
   background-color: #4A99E9;
 }
-
+.blue:hover{
+  background-color:dodgerblue;
+}
 .green {
   background-color: #11B05C;
+}
+.green:hover{
+  background-color: forestgreen;
 }
 
 .orange {
   background-color: #F7A24F;
 }
+.orange:hover{
+  background-color:coral;
+}
+
+
+rt { color: white; 
+      font-size: 20px;
+      position: relative }
